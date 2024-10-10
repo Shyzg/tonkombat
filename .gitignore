@@ -1,0 +1,9 @@
+__pycache__
+.vscode
+development
+venv
+.DS_Store
+*.json
+*.session
+!config.json
+!removethis.example
