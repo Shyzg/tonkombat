@@ -66,7 +66,10 @@ class TonKombat:
                     await client.connect()
             except (AuthKeyUnregisteredError, UnauthorizedError, UserDeactivatedBanError, UserDeactivatedError) as e:
                 raise e
+
             me = await client.get_me()
+            first_name = me.first_name if me.first_name is not None else me.username
+
             webapp_response: AppWebViewResultUrl = await client(messages.RequestAppWebViewRequest(
                 peer='Ton_kombat_bot',
                 app=InputBotAppShortName(bot_id=await client.get_input_entity('Ton_kombat_bot'), short_name='app'),
@@ -75,7 +78,6 @@ class TonKombat:
                 start_param='6094625904'
             ))
             query = unquote(string=webapp_response.url.split('tgWebAppData=')[1].split('&tgWebAppVersion')[0])
-            first_name = me.first_name if me.first_name is not None else me.username
 
             if client.is_connected():
                 await client.disconnect()
