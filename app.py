@@ -6,7 +6,6 @@ from aiohttp import (
 from colorama import *
 from datetime import datetime, timedelta
 from fake_useragent import FakeUserAgent
-from faker import Faker
 from telethon.errors import (
     AuthKeyUnregisteredError,
     UserDeactivatedError,
@@ -30,7 +29,6 @@ class TonKombat:
         self.pet_active_skill = config['pet_active_skill']
         self.auto_upgrade = config['auto_upgrade']
         self.auto_fight = config['auto_fight']
-        self.faker = Faker()
         self.headers = {
             'Accept': 'application/json, text/plain, */*',
             'Accept-Encoding': 'gzip, deflate, br',
