@@ -5,5 +5,5 @@ venv
 .DS_Store
 *.json
 *.session
-!config.json
+!config.example.json
 !removethis.example
