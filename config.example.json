@@ -3,5 +3,6 @@
     "api_hash": "00000000000000000000000000000000",
     "pet_active_skill": "rising-fury",
     "auto_upgrade": true,
-    "auto_fight": true
+    "auto_fight": true,
+    "equipments_names": ["halloween-happy-bird", "sword-welcome", "shield-queen-gift", "key-ss2-reward", "wings-hamster"]
 }

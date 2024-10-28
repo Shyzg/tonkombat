@@ -29,6 +29,7 @@ class TonKombat:
         self.pet_active_skill = config['pet_active_skill']
         self.auto_upgrade = config['auto_upgrade']
         self.auto_fight = config['auto_fight']
+        self.equipments_names = config['equipments_names']
         self.headers = {
             'Accept': 'application/json, text/plain, */*',
             'Accept-Encoding': 'gzip, deflate, br',
@@ -62,11 +63,11 @@ class TonKombat:
             try:
                 if not client.is_connected():
                     await client.connect()
-            except (AuthKeyUnregisteredError, UnauthorizedError, UserDeactivatedBanError, UserDeactivatedError) as e:
-                raise e
 
-            me = await client.get_me()
-            first_name = me.first_name if me.first_name is not None else me.username
+                    me = await client.get_me()
+                    name = me.first_name if me.first_name is not None else me.username
+            except (AuthKeyUnregisteredError, UnauthorizedError, UserDeactivatedBanError, UserDeactivatedError) as error:
+                raise error
 
             webapp_response: AppWebViewResultUrl = await client(messages.RequestAppWebViewRequest(
                 peer='Ton_kombat_bot',
@@ -80,10 +81,10 @@ class TonKombat:
             if client.is_connected():
                 await client.disconnect()
 
-            return (query, first_name)
-        except Exception as e:
+            return (name, query)
+        except Exception as error:
             await client.disconnect()
-            self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ {session} Unexpected Error While Generating Query With Telethon: {str(e)} ]{Style.RESET_ALL}")
+            self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ {session} Unexpected Error While Generating Query With Telethon: {str(error)} ]{Style.RESET_ALL}")
             return None
 
     async def generate_queries(self, sessions):
@@ -108,10 +109,10 @@ class TonKombat:
                     response.raise_for_status()
                     daily = await response.json()
                     return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {float(daily['data']['amount'] / 1000000000)} From Daily Bonus ]{Style.RESET_ALL}")
-        except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Season: {str(e)} ]{Style.RESET_ALL}")
-        except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching Season: {str(e)} ]{Style.RESET_ALL}")
+        except ClientResponseError as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Season: {str(error)} ]{Style.RESET_ALL}")
+        except Exception as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching Season: {str(error)} ]{Style.RESET_ALL}")
 
     async def upgrades(self, query: str, type: str):
         url = 'https://liyue.tonkombat.com/api/v1/upgrades'
@@ -131,10 +132,10 @@ class TonKombat:
                             return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Not Enough TOK To Upgrade {type} ]{Style.RESET_ALL}")
                     response.raise_for_status()
                     return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ Successfully Upgrade {type} ]{Style.RESET_ALL}")
-        except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Upgrades: {str(e)} ]{Style.RESET_ALL}")
-        except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Upgrades: {str(e)} ]{Style.RESET_ALL}")
+        except ClientResponseError as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Upgrades: {str(error)} ]{Style.RESET_ALL}")
+        except Exception as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Upgrades: {str(error)} ]{Style.RESET_ALL}")
 
     async def season_start(self, query: str):
         url = 'https://liyue.tonkombat.com/api/v1/season/start'
@@ -151,7 +152,7 @@ class TonKombat:
         except (Exception, ClientResponseError):
             return False
 
-    async def onboard_users(self, query: str):
+    async def users_onboard(self, query: str):
         url = 'https://liyue.tonkombat.com/api/v1/users/onboard'
         data = json.dumps({'house_id':6})
         headers = {
@@ -168,7 +169,7 @@ class TonKombat:
         except (Exception, ClientResponseError):
             return False
 
-    async def balance_users(self, query: str):
+    async def users_balance(self, query: str):
         url = 'https://liyue.tonkombat.com/api/v1/users/balance'
         headers = {
             **self.headers,
@@ -179,14 +180,14 @@ class TonKombat:
                 async with session.get(url=url, headers=headers, ssl=False) as response:
                     response.raise_for_status()
                     return await response.json()
-        except ClientResponseError as e:
-            self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Balance Users: {str(e)} ]{Style.RESET_ALL}")
+        except ClientResponseError as error:
+            self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Balance Users: {str(error)} ]{Style.RESET_ALL}")
             return None
-        except Exception as e:
-            self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Balance Users: {str(e)} ]{Style.RESET_ALL}")
+        except Exception as error:
+            self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Balance Users: {str(error)} ]{Style.RESET_ALL}")
             return None
 
-    async def claim_users(self, query: str):
+    async def users_claim(self, query: str):
         url = 'https://liyue.tonkombat.com/api/v1/users/claim'
         headers = {
             **self.headers,
@@ -197,18 +198,18 @@ class TonKombat:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
                 async with session.post(url=url, headers=headers, ssl=False) as response:
                     if response.status == 400:
-                        error_claim_users = await response.json()
-                        if error_claim_users['message'] == 'claim too early':
+                        error_users_claim = await response.json()
+                        if error_users_claim['message'] == 'claim too early':
                             return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Claim Too Early ]{Style.RESET_ALL}")
                     response.raise_for_status()
-                    claim_users = await response.json()
-                    return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {float(claim_users['data']['amount'] / 1000000000)} From Mining ]{Style.RESET_ALL}")
-        except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Claim Users: {str(e)} ]{Style.RESET_ALL}")
-        except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Claim Users: {str(e)} ]{Style.RESET_ALL}")
+                    users_claim = await response.json()
+                    return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {float(users_claim['data']['amount'] / 1000000000)} From Mining ]{Style.RESET_ALL}")
+        except ClientResponseError as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Claim Users: {str(error)} ]{Style.RESET_ALL}")
+        except Exception as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Claim Users: {str(error)} ]{Style.RESET_ALL}")
 
-    async def spend_stars_users(self, query: str):
+    async def users_stars_spend(self, query: str):
         url = 'https://liyue.tonkombat.com/api/v1/users/stars/spend'
         data = json.dumps({'type':'upgrade-army-rank'})
         headers = {
@@ -221,17 +222,17 @@ class TonKombat:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
                 async with session.post(url=url, headers=headers, data=data, ssl=False) as response:
                     if response.status == 400:
-                        error_spend_stars_users = await response.json()
-                        if error_spend_stars_users['message'] == 'not enough stars to upgrade':
+                        error_users_stars_spend = await response.json()
+                        if error_users_stars_spend['message'] == 'not enough stars to upgrade':
                             return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Not Enough Stars To Upgrade Rank ]{Style.RESET_ALL}")
                     response.raise_for_status()
-                    spend_stars_users = await response.json()
-                    if spend_stars_users['data']:
+                    users_stars_spend = await response.json()
+                    if users_stars_spend['data']:
                         return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ Successfully Upgrade Rank ]{Style.RESET_ALL}")
-        except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Claim Users: {str(e)} ]{Style.RESET_ALL}")
-        except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Claim Users: {str(e)} ]{Style.RESET_ALL}")
+        except ClientResponseError as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Claim Users: {str(error)} ]{Style.RESET_ALL}")
+        except Exception as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Claim Users: {str(error)} ]{Style.RESET_ALL}")
 
     async def combats_me(self, query: str):
         url = 'https://liyue.tonkombat.com/api/v1/combats/me'
@@ -247,10 +248,10 @@ class TonKombat:
                     if combats_me['data']['pet']['active_skill'] != self.pet_active_skill:
                         await self.combats_pets_skill(query=query)
                     await self.combats_energy(query=query)
-        except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Combats Me: {str(e)} ]{Style.RESET_ALL}")
-        except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching Combats Me: {str(e)} ]{Style.RESET_ALL}")
+        except ClientResponseError as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Combats Me: {str(error)} ]{Style.RESET_ALL}")
+        except Exception as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching Combats Me: {str(error)} ]{Style.RESET_ALL}")
 
     async def combats_pets_skill(self, query: str):
         url = 'https://liyue.tonkombat.com/api/v1/combats/pets/skill'
@@ -268,10 +269,10 @@ class TonKombat:
                     combats_pets_skill = await response.json()
                     if combats_pets_skill['data']:
                         return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ Successfully Activate Pet Skill {self.pet_active_skill} ]{Style.RESET_ALL}")
-        except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Me Combats: {str(e)} ]{Style.RESET_ALL}")
-        except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching Me Combats: {str(e)} ]{Style.RESET_ALL}")
+        except ClientResponseError as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Me Combats: {str(error)} ]{Style.RESET_ALL}")
+        except Exception as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching Me Combats: {str(error)} ]{Style.RESET_ALL}")
 
     async def combats_energy(self, query: str):
         url = 'https://liyue.tonkombat.com/api/v1/combats/energy'
@@ -287,10 +288,10 @@ class TonKombat:
                     if combats_energy['data']['current_energy'] == 0 and datetime.fromisoformat(combats_energy['data']['next_refill'].replace('Z', '+00:00')).astimezone().timestamp() > datetime.now().astimezone().timestamp():
                         return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Can Be Fight At {datetime.fromisoformat(combats_energy['data']['next_refill'].replace('Z', '+00:00')).astimezone().astimezone().strftime('%x %X %Z')} ]{Style.RESET_ALL}")
                     return await self.combats_find(query=query)
-        except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Combats Energy: {str(e)} ]{Style.RESET_ALL}")
-        except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching Combats Energy: {str(e)} ]{Style.RESET_ALL}")
+        except ClientResponseError as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Combats Energy: {str(error)} ]{Style.RESET_ALL}")
+        except Exception as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching Combats Energy: {str(error)} ]{Style.RESET_ALL}")
 
     async def combats_find(self, query: str):
         url = 'https://liyue.tonkombat.com/api/v1/combats/find'
@@ -306,14 +307,14 @@ class TonKombat:
                         if response.status == 400:
                             error_combats_find = await response.json()
                             if error_combats_find['message'] == 'out of energies':
-                                return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Out Of Energies ]{Style.RESET_ALL}")
+                                return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Out Of Energies ]{Style.RESET_ALL}")
                         response.raise_for_status()
                         await asyncio.sleep(10)
                         await self.combats_fight(query=query)
-            except ClientResponseError as e:
-                return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Combats Find: {str(e)} ]{Style.RESET_ALL}")
-            except Exception as e:
-                return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Combats Find: {str(e)} ]{Style.RESET_ALL}")
+            except ClientResponseError as error:
+                return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Combats Find: {str(error)} ]{Style.RESET_ALL}")
+            except Exception as error:
+                return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Combats Find: {str(error)} ]{Style.RESET_ALL}")
 
     async def combats_fight(self, query: str):
         url = 'https://liyue.tonkombat.com/api/v1/combats/fight'
@@ -328,16 +329,16 @@ class TonKombat:
                     if response.status == 400:
                         error_combats_fight = await response.json()
                         if error_combats_fight['message'] == 'match not found':
-                            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ Match Not Found ]{Style.RESET_ALL}")
+                            return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Match Not Found ]{Style.RESET_ALL}")
                     response.raise_for_status()
                     combats_fight = await response.json()
                     if combats_fight['data']['winner'] == 'attacker':
                         return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You Beat {combats_fight['data']['enemy']['username']} And Your Rank Gained {combats_fight['data']['rank_gain']} ]{Style.RESET_ALL}")
                     return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ You Lost To {combats_fight['data']['enemy']['username']} ]{Style.RESET_ALL}")
-        except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Combats Fight: {str(e)} ]{Style.RESET_ALL}")
-        except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Combats Fight: {str(e)} ]{Style.RESET_ALL}")
+        except ClientResponseError as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Combats Fight: {str(error)} ]{Style.RESET_ALL}")
+        except Exception as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Combats Fight: {str(error)} ]{Style.RESET_ALL}")
 
     async def equipments_me(self, query: str):
         url = 'https://liyue.tonkombat.com/api/v1/equipments/me'
@@ -349,12 +350,17 @@ class TonKombat:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
                 async with session.get(url=url, headers=headers, ssl=False) as response:
                     response.raise_for_status()
-                    return await response.json()
-        except ClientResponseError as e:
-            self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Equipments Me: {str(e)} ]{Style.RESET_ALL}")
+                    equipments_me = await response.json()
+                    for equipments_name in self.equipments_names:
+                        await self.equipments_status(query=query, name=equipments_name)
+                    for equipment in equipments_me['data']:
+                        await self.equipments_equip(query=query, equipment_id=equipment['id'], equipment_name=equipment['name'])
+                    await self.combats_me(query=query)
+        except ClientResponseError as error:
+            self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Equipments Me: {str(error)} ]{Style.RESET_ALL}")
             return None
-        except Exception as e:
-            self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching Equipments Me: {str(e)} ]{Style.RESET_ALL}")
+        except Exception as error:
+            self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching Equipments Me: {str(error)} ]{Style.RESET_ALL}")
             return None
 
     async def equipments_equip(self, query: str, equipment_id: str, equipment_name: str):
@@ -371,13 +377,13 @@ class TonKombat:
                     equipments_equip = await response.json()
                     if equipments_equip['data']:
                         return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ {equipment_name} Equipped ]{Style.RESET_ALL}")
-        except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Equipments Equip: {str(e)} ]{Style.RESET_ALL}")
-        except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching Equipments Equip: {str(e)} ]{Style.RESET_ALL}")
+        except ClientResponseError as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Equipments Equip: {str(error)} ]{Style.RESET_ALL}")
+        except Exception as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching Equipments Equip: {str(error)} ]{Style.RESET_ALL}")
 
-    async def equipments_welcome(self, query: str):
-        url = 'https://liyue.tonkombat.com/api/v1/equipments/welcome'
+    async def equipments_status(self, query: str, name: str):
+        url = f'https://liyue.tonkombat.com/api/v1/equipments/{name}/status'
         headers = {
             **self.headers,
             'Authorization': f'tma {query}'
@@ -386,19 +392,13 @@ class TonKombat:
             async with ClientSession(timeout=ClientTimeout(total=20)) as session:
                 async with session.get(url=url, headers=headers, ssl=False) as response:
                     response.raise_for_status()
-                    welcome_equipments = await response.json()
-                    if welcome_equipments['data'] == 'claimable':
-                        await self.equipments_claim(query=query, name='sword-welcome')
-
-                    equipments_me = await self.equipments_me(query=query)
-                    if equipments_me is not None:
-                        for equipment in equipments_me['data']:
-                            await self.equipments_equip(query=query, equipment_id=equipment['id'], equipment_name=equipment['name'])
-                        await self.combats_me(query=query)
-        except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Welcome Equipments: {str(e)} ]{Style.RESET_ALL}")
-        except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching Welcome Equipments: {str(e)} ]{Style.RESET_ALL}")
+                    equipments_status = await response.json()
+                    if equipments_status['data'] == 'claimable':
+                        return await self.equipments_claim(query=query, name=name)
+        except ClientResponseError as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Claim Equipments: {str(error)} ]{Style.RESET_ALL}")
+        except Exception as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Claim Equipments: {str(error)} ]{Style.RESET_ALL}")
 
     async def equipments_claim(self, query: str, name: str):
         url = f'https://liyue.tonkombat.com/api/v1/equipments/{name}/claim'
@@ -413,15 +413,15 @@ class TonKombat:
                     if response.status == 400:
                         error_claim_equipments = await response.json()
                         if error_claim_equipments['message'] == 'non-claimable':
-                            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ {name} Non-Claimable ]{Style.RESET_ALL}")
+                            return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ {name} Non-Claimable ]{Style.RESET_ALL}")
                     response.raise_for_status()
                     claim_equipments = await response.json()
                     if claim_equipments['data']:
                         return self.print_timestamp(f"{Fore.GREEN + Style.BRIGHT}[ You\'ve Got {name} From Equipments ]{Style.RESET_ALL}")
-        except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Claim Equipments: {str(e)} ]{Style.RESET_ALL}")
-        except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Claim Equipments: {str(e)} ]{Style.RESET_ALL}")
+        except ClientResponseError as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Claim Equipments: {str(error)} ]{Style.RESET_ALL}")
+        except Exception as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Claim Equipments: {str(error)} ]{Style.RESET_ALL}")
 
     async def tasks_progresses(self, query: str):
         url = 'https://liyue.tonkombat.com/api/v1/tasks/progresses'
@@ -438,10 +438,10 @@ class TonKombat:
                         if task['task_user'] is None or (task['task_user']['reward_amount'] == 0 and task['task_user']['repeats'] == 0):
                             self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Starting {task['name']} ]{Style.RESET_ALL}")
                             await self.tasks(query=query, task_id=task['id'])
-        except ClientResponseError as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Tasks: {str(e)} ]{Style.RESET_ALL}")
-        except Exception as e:
-            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching Tasks: {str(e)} ]{Style.RESET_ALL}")
+        except ClientResponseError as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Fetching Tasks: {str(error)} ]{Style.RESET_ALL}")
+        except Exception as error:
+            return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An Unexpected Error Occurred While Fetching Tasks: {str(error)} ]{Style.RESET_ALL}")
 
     async def tasks(self, query: str, task_id: str):
         url = f'https://liyue.tonkombat.com/api/v1/tasks/{task_id}'
@@ -473,11 +473,11 @@ class TonKombat:
                         f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
                         f"{Fore.CYAN + Style.BRIGHT}[ {first_name} ]{Style.RESET_ALL}"
                     )
-                    await self.onboard_users(query=query)
+                    await self.users_onboard(query=query)
                     await self.season_start(query=query)
                     await self.daily(query=query)
-                    await self.claim_users(query=query)
-                    await self.spend_stars_users(query=query)
+                    await self.users_claim(query=query)
+                    await self.users_stars_spend(query=query)
 
                 for (query, first_name) in accounts:
                     self.print_timestamp(
@@ -507,8 +507,8 @@ class TonKombat:
                             await self.upgrades(query=query, type=type)
 
                 for (query, first_name) in accounts:
-                    balance_users = await self.balance_users(query=query)
-                    total_balance += float(balance_users['data'] / 1000000000) if balance_users is not None else 0.0
+                    users_balance = await self.users_balance(query=query)
+                    total_balance += float(users_balance['data'] / 1000000000) if users_balance is not None else 0.0
 
                 self.print_timestamp(
                     f"{Fore.CYAN + Style.BRIGHT}[ Total Account {len(accounts)} ]{Style.RESET_ALL}"
@@ -519,8 +519,8 @@ class TonKombat:
 
                 await asyncio.sleep(3600)
                 self.clear_terminal()
-            except Exception as e:
-                self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ {str(e)} ]{Style.RESET_ALL}")
+            except Exception as error:
+                self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ {str(error)} ]{Style.RESET_ALL}")
                 continue
 
 if __name__ == '__main__':
@@ -530,7 +530,7 @@ if __name__ == '__main__':
         init(autoreset=True)
         tonkombat = TonKombat()
         asyncio.run(tonkombat.main())
-    except (ValueError, IndexError, FileNotFoundError) as e:
-        tonkombat.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ {str(e)} ]{Style.RESET_ALL}")
+    except (ValueError, IndexError, FileNotFoundError) as error:
+        tonkombat.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ {str(error)} ]{Style.RESET_ALL}")
     except KeyboardInterrupt:
         sys.exit(0)
