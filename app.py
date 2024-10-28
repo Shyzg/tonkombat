@@ -494,7 +494,7 @@ class TonKombat:
                             f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
                             f"{Fore.CYAN + Style.BRIGHT}[ {name} ]{Style.RESET_ALL}"
                         )
-                        await self.equipments_welcome(query=query)
+                        await self.equipments_me(query=query)
 
                 if self.auto_upgrade:
                     for (name, query) in accounts:
