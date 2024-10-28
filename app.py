@@ -467,11 +467,11 @@ class TonKombat:
                 accounts = await self.generate_queries(sessions=sessions)
                 total_balance = 0.0
 
-                for (query, first_name) in accounts:
+                for (name, query) in accounts:
                     self.print_timestamp(
                         f"{Fore.WHITE + Style.BRIGHT}[ Home ]{Style.RESET_ALL}"
                         f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-                        f"{Fore.CYAN + Style.BRIGHT}[ {first_name} ]{Style.RESET_ALL}"
+                        f"{Fore.CYAN + Style.BRIGHT}[ {name} ]{Style.RESET_ALL}"
                     )
                     await self.users_onboard(query=query)
                     await self.season_start(query=query)
@@ -479,34 +479,34 @@ class TonKombat:
                     await self.users_claim(query=query)
                     await self.users_stars_spend(query=query)
 
-                for (query, first_name) in accounts:
+                for (name, query) in accounts:
                     self.print_timestamp(
                         f"{Fore.WHITE + Style.BRIGHT}[ Earn ]{Style.RESET_ALL}"
                         f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-                        f"{Fore.CYAN + Style.BRIGHT}[ {first_name} ]{Style.RESET_ALL}"
+                        f"{Fore.CYAN + Style.BRIGHT}[ {name} ]{Style.RESET_ALL}"
                     )
                     await self.tasks_progresses(query=query)
 
                 if self.auto_fight:
-                    for (query, first_name) in accounts:
+                    for (name, query) in accounts:
                         self.print_timestamp(
                             f"{Fore.WHITE + Style.BRIGHT}[ Fight ]{Style.RESET_ALL}"
                             f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-                            f"{Fore.CYAN + Style.BRIGHT}[ {first_name} ]{Style.RESET_ALL}"
+                            f"{Fore.CYAN + Style.BRIGHT}[ {name} ]{Style.RESET_ALL}"
                         )
                         await self.equipments_welcome(query=query)
 
                 if self.auto_upgrade:
-                    for (query, first_name) in accounts:
+                    for (name, query) in accounts:
                         self.print_timestamp(
                             f"{Fore.WHITE + Style.BRIGHT}[ Upgrades ]{Style.RESET_ALL}"
                             f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
-                            f"{Fore.CYAN + Style.BRIGHT}[ {first_name} ]{Style.RESET_ALL}"
+                            f"{Fore.CYAN + Style.BRIGHT}[ {name} ]{Style.RESET_ALL}"
                         )
                         for type in ['pocket-size', 'mining-tok']:
                             await self.upgrades(query=query, type=type)
 
-                for (query, first_name) in accounts:
+                for (name, query) in accounts:
                     users_balance = await self.users_balance(query=query)
                     total_balance += float(users_balance['data'] / 1000000000) if users_balance is not None else 0.0
 
