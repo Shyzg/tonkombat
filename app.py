@@ -1,3 +1,4 @@
+from random import randint
 from aiohttp import (
     ClientResponseError,
     ClientSession,
@@ -309,7 +310,7 @@ class TonKombat:
                             if error_combats_find['message'] == 'out of energies':
                                 return self.print_timestamp(f"{Fore.YELLOW + Style.BRIGHT}[ Out Of Energies ]{Style.RESET_ALL}")
                         response.raise_for_status()
-                        await asyncio.sleep(10)
+                        await asyncio.sleep(randint(3, 5))
                         await self.combats_fight(query=query)
             except ClientResponseError as error:
                 return self.print_timestamp(f"{Fore.RED + Style.BRIGHT}[ An HTTP Error Occurred While Combats Find: {str(error)} ]{Style.RESET_ALL}")
