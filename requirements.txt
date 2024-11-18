@@ -1,4 +1,4 @@
-aiohttp==3.10.9
+aiohttp==3.10.11
 Brotli==1.1.0
 colorama==0.4.6
 fake-useragent==1.5.1
